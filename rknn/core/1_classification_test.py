@@ -89,10 +89,9 @@ def is_drowsy(img_path: str) -> tuple:
     outputs = rknn_model.inference(inputs=[input_tensor], data_format='nhwc')
     probs = outputs[0][0]
     
-    # 核心修复：根据你的输出调整概率映射关系
-    # 从你的输出看，probs[0]是非瞌睡概率，probs[1]是瞌睡概率
-    prob_nondrowsy = float(probs[0])
-    prob_drowsy = float(probs[1])
+    # 计算概率
+    prob_drowsy = float(probs[0])
+    prob_nondrowsy = float(probs[1])
     is_drowsy_flag = prob_drowsy > prob_nondrowsy
     class_name = class_names[0] if is_drowsy_flag else class_names[1]
     
@@ -104,7 +103,7 @@ if __name__ == "__main__":
     
     test_images = [
         './test_images/drowsy.png',
-        './test_images/nodrowsy.png'
+        './test_images/normal.png'
     ]
     
     for img_path in test_images:

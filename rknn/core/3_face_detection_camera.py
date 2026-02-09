@@ -11,6 +11,16 @@ import numpy as np
 import cv2
 import time
 
+ONNX_PATH = "./weights/face.onnx"            # ONNX模型路径
+PLATFORM = 'rk3588'                          # 运行平台（rk3568/rk3588等）
+CONF_THRES = 0.70                            # 检测置信度阈值
+IOU_THRES = 0.5                              # NMS的IOU阈值
+IMG_SIZE = 320                               # 模型输入尺寸
+INPUT_SIZE_LIST = [[3, IMG_SIZE, IMG_SIZE]]  # RKNN输入尺寸列表
+DEVICE = "/dev/video11"                      # 摄像头设备号（根据实际修改）
+WINDOW_NAME = "RKNN Face Detection (Camera)" # 显示窗口名称
+DEBUG = False 
+
 
 # -------------------------- 核心工具函数 --------------------------
 def autopad(k, p=None):
@@ -242,7 +252,8 @@ def face_detect_rknn(
                 face_roi = img0[y1:y2, x1:x2]
                 face_rgb = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB) # BGR->RGB
                 face_image = Image.fromarray(face_rgb) # numpy数组->PIL图像（这里扣出了人脸区域）# TODO
-                print(f"face_image's width: {face_image.size[0]}, height: {face_image.size[1]}") # face_image ->(W, H)
+                if DEBUG:
+                    print(f"face_image's width: {face_image.size[0]}, height: {face_image.size[1]}") # face_image ->(W, H)
                 
                 conf = det[j, 4].item()
                 landmarks = det[j, 5:15].tolist()
@@ -251,15 +262,6 @@ def face_detect_rknn(
 
 
 if __name__ == "__main__":
-
-    ONNX_PATH = "./weights/face.onnx"           # ONNX模型路径
-    PLATFORM = 'rk3588'                         # 运行平台（rk3568/rk3588等）
-    CONF_THRES = 0.70                            # 检测置信度阈值
-    IOU_THRES = 0.5                             # NMS的IOU阈值
-    IMG_SIZE = 320                              # 模型输入尺寸
-    INPUT_SIZE_LIST = [[3, IMG_SIZE, IMG_SIZE]] # RKNN输入尺寸列表
-    DEVICE = "/dev/video11"                     # 摄像头设备号（根据实际修改）
-    WINDOW_NAME = "RKNN Face Detection (Camera)"# 显示窗口名称
 
     # 加载RKNN模型
     rknn_model = load_rknn_model(ONNX_PATH, INPUT_SIZE_LIST, PLATFORM)

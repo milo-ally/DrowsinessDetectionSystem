@@ -1,4 +1,8 @@
 # -*- coding: UTF-8 -*-
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+
 import cv2
 import torch
 import torch.nn as nn
@@ -9,7 +13,15 @@ import sys
 import torchvision
 from PIL import Image 
 import time
-import torchvision.transforms as T
+import torchvision.transforms as T 
+
+# 核心配置
+DETECT_WEIGHTS_PATH = './weights/detect.pt'
+CLASSIFY_WEIGHTS_PATH = './weights/classify.pt'
+CONF_THRES = 0.6
+CLASSIFY_IMG_SIZE = 224
+DEBUG = True
+CAMERA = 0
 
 # -------------------------- 人脸检测模型相关函数 --------------------------
 def autopad(k, p=None):
@@ -271,12 +283,6 @@ def face_detect_and_classify(detect_model, classify_model, img, device, classify
 
 # -------------------------- 主程序 --------------------------
 if __name__ == '__main__':
-    # 核心配置
-    DETECT_WEIGHTS_PATH = './weights/detect.pt'
-    CLASSIFY_WEIGHTS_PATH = './weights/classify.pt'
-    CONF_THRES = 0.6
-    CLASSIFY_IMG_SIZE = 224
-    DEBUG = True
 
     # 设备适配
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -297,7 +303,7 @@ if __name__ == '__main__':
     print("开始实时人脸检测和分类，按 'q' 键退出...")
 
     # 打开摄像头
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(CAMERA)
     if not cap.isOpened():
         print("错误：无法打开摄像头！")
         sys.exit(1)
@@ -338,7 +344,7 @@ if __name__ == '__main__':
         cv2.putText(frame_result, f'FPS: {fps:.1f}', (10, 30), 0, tl/3, [0, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
         # 显示结果
-        cv2.imshow('Face Detection & Classification (Drowsy=Red, Normal=Green)', frame_result)
+        cv2.imshow('Drowsiness Detection System (demo)', frame_result)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 

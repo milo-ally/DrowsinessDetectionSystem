@@ -1,5 +1,9 @@
 torch 
 torchvision 
-numpy 
-Pillow
-opencv-python
+requests
+thop 
+PyYAML
+matplotlib
+ultralytics==8.3.230
+
+# torch==2.2.0  <=> torchvision==0.17.0 

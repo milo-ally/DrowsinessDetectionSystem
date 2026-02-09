@@ -1,12 +1,19 @@
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+
 import cv2
 import torch
-import torchvision.transforms as T
+# pip install torchvision==0.17.0 --force-reinstall --no-deps -i https://pypi.tuna.tsinghua.edu.cn/simple
+# pip install ultralytics
 from PIL import Image
+import torchvision.transforms as T 
 
 # 配置
 MODEL_PATH = "./weights/classify.pt"
 IMG_SIZE = 224
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+CAMERA = 0
 
 def classify_transforms(size=224):
     """创建分类任务的图像预处理transforms"""
@@ -24,7 +31,7 @@ class_names = {0: 'Drowsy', 1: 'NonDrowsy'}
 model_transforms = classify_transforms(size=IMG_SIZE)
 
 # 实时检测
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(CAMERA)
 frame_count = 0
 
 with torch.no_grad():

@@ -1,4 +1,8 @@
 # -*- coding: UTF-8 -*-
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+
 import cv2
 import torch
 import torch.nn as nn
@@ -9,6 +13,11 @@ import sys
 import torchvision
 from PIL import Image 
 import time  
+
+# 核心配置
+WEIGHTS_PATH = './weights/detect.pt'
+CONF_THRES = 0.6
+CAMERA = 0 
 
 # -------------------------- 核心卷积层/集成模型 --------------------------
 def autopad(k, p=None):
@@ -198,9 +207,6 @@ def face_detect(model, img, device, img_size=640, conf_thres=0.6, iou_thres=0.5)
 
 # -------------------------- 主程序（仅新增帧数计算/绘制代码，其他无改） --------------------------
 if __name__ == '__main__':
-    # 核心配置
-    WEIGHTS_PATH = './weights/detect.pt'
-    CONF_THRES = 0.6
 
     # 设备适配
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -209,7 +215,7 @@ if __name__ == '__main__':
     print("模型加载成功！开始实时人脸检测，按 'q' 键退出...")
 
     # 打开摄像头
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(CAMERA)
     if not cap.isOpened():
         print("错误：无法打开摄像头！")
         sys.exit(1)

@@ -23,7 +23,7 @@ CLASSIFY_INPUT_SIZE_LIST = [[3, *CLASSIFY_INPUT_SIZE]]
 CONF_THRES = 0.70
 IOU_THRES = 0.5
 DEVICE = "/dev/video11"  # 摄像头设备号（根据实际修改）
-DEBUG = True
+DEBUG = False
 class_names = {0: 'Drowsy', 1: 'Normal'}
 
 # 全局RKNN模型实例
@@ -211,7 +211,7 @@ def load_rknn_model(onnx_path, input_size_list, target_platform="rk3588"):
     
     # 初始化RKNN运行时
     print(f"[INFO] 初始化RKNN运行时...")
-    if rknn.init_runtime(target=target_platform) != 0:
+    if rknn.init_runtime(target=target_platform, core_mask=RKNN.NPU_CORE_ALL) != 0:
         print(f"[ERROR] 初始化RKNN运行时失败")
         rknn.release()
         return None
@@ -266,8 +266,7 @@ def preprocess_classify_image(face_roi):
         img = img[start_h:start_h + target_size, start_w:start_w + target_size]
     
     # 归一化：(img / 255.0 - mean) / std
-    # mean=[0,0,0], std=[1,1,1] 实际上就是 img/255.0
-    img = (img / 255.0 - np.array([0.0, 0.0, 0.0])) / np.array([1.0, 1.0, 1.0])
+    img = (img / 255.0 - np.array([0.0, 0.0, 0.0])) / np.array([1.0, 1.0, 1.0]) # mean=[0,0,0], std=[1,1,1] 实际上就是 img/255.0
     
     # 确保数据类型和形状正确
     img = np.ascontiguousarray(img, dtype=np.float32)
@@ -288,11 +287,10 @@ def classify_face(classify_rknn, face_roi):
     # RKNN推理
     outputs = classify_rknn.inference(inputs=[input_tensor], data_format='nhwc')
     probs = outputs[0][0]
-    
-    # 根据5_classification_test.py的逻辑：
-    # probs[0]是非瞌睡概率，probs[1]是瞌睡概率
-    prob_nondrowsy = float(probs[0])
-    prob_drowsy = float(probs[1])
+
+    # 提取概率值
+    prob_nondrowsy = float(probs[1]) # probs[1] 是不瞌睡的概率
+    prob_drowsy = float(probs[0]) # probs[0] 是不瞌睡的概率
     
     if DEBUG:
         print(f"prob_nondrowsy: {prob_nondrowsy}, prob_drowsy: {prob_drowsy}")
@@ -403,8 +401,7 @@ if __name__ == "__main__":
     print(f"[SUCCESS] 摄像头打开并配置成功！")
     
     # 实时摄像头检测循环（按q退出）
-    print(f"[INFO] 开始实时人脸检测和分类，按 'q' 退出...")
-    print(f"[INFO] Drowsy=红色框，Normal=绿色框")
+    print(f"[INFO] 开始实时检测...")
     
     fps_count = 0
     fps_start = time.time()
@@ -443,7 +440,7 @@ if __name__ == "__main__":
             cv2.putText(det_frame, f'FPS: {fps:.1f}', (10, 30), 0, tl/3, [0, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
             
             # 显示检测结果
-            cv2.imshow('RKNN Face Detection & Classification (Drowsy=Red, Normal=Green)', det_frame)
+            cv2.imshow('Drowsiness Detection System (demo)', det_frame)
             
             # 按q退出
             if cv2.waitKey(1) & 0xFF == ord('q'):
